@@ -16,19 +16,29 @@ export default function BackgroundVideo() {
     const video = videoRef.current;
     if (!video) return;
 
+    // React bug: sometimes muted isn't applied fast enough for iOS autoplay policies
+    video.defaultMuted = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('muted', 'true');
+
     // Force load the first frame for iOS
     const onLoadedMetadata = () => {
-      video.currentTime = 0.01;
+      // Small delay helps iOS actually paint the frame
+      setTimeout(() => {
+        if (video) video.currentTime = 0.01;
+      }, 50);
     };
 
     // Unlock video on iOS (requires user interaction to allow arbitrary scrubbing)
     const unlockVideo = () => {
-      if (hasUnlockedRef.current) return;
+      if (hasUnlockedRef.current || !video) return;
       hasUnlockedRef.current = true;
       video.play().then(() => {
         video.pause();
       }).catch(() => {
-        // Silent catch if play fails
+        // Silent catch if play fails (e.g. low power mode strict block)
       });
     };
 
@@ -41,7 +51,6 @@ export default function BackgroundVideo() {
 
     const onSeeked = () => {
       isSeeking.current = false;
-      // If target moved while we were seeking, seek again
       if (Math.abs(video.currentTime - targetTimeRef.current) > 0.01) {
         isSeeking.current = true;
         seekToTarget();
@@ -82,11 +91,6 @@ export default function BackgroundVideo() {
     };
     
     const onTouchMove = (e: TouchEvent) => {
-      // Prevent default scrolling when swiping horizontally on the video
-      if (Math.abs(e.touches[0].clientX - (prevXRef.current || e.touches[0].clientX)) > 5) {
-        // We do not prevent default here so vertical scroll still works, 
-        // but handling touch scrub will process.
-      }
       handleMove(e.touches[0].clientX);
     };
 
@@ -96,7 +100,6 @@ export default function BackgroundVideo() {
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
 
-    // Fallback: try to load first frame if metadata is already loaded
     if (video.readyState >= 1) {
       onLoadedMetadata();
     }
@@ -113,10 +116,10 @@ export default function BackgroundVideo() {
   return (
     <video
       ref={videoRef}
-      src={VIDEO_URL}
+      /* Appending #t=0.001 uses the Media Fragments API to force Safari to extract a poster frame natively */
+      src={`${VIDEO_URL}#t=0.001`}
       muted
       playsInline
-      autoPlay={false}
       preload="auto"
       className="fixed inset-0 w-full h-full object-cover z-0 object-center md:object-[70%_center]"
       style={{ backgroundColor: '#080808' }} 
