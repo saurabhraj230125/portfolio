@@ -31,13 +31,13 @@ export default function BackgroundVideo() {
       }
     };
 
-    const onMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number) => {
       if (prevXRef.current === null) {
-        prevXRef.current = e.clientX;
+        prevXRef.current = clientX;
         return;
       }
-      const delta = e.clientX - prevXRef.current;
-      prevXRef.current = e.clientX;
+      const delta = clientX - prevXRef.current;
+      prevXRef.current = clientX;
 
       if (!video.duration) return;
 
@@ -54,12 +54,20 @@ export default function BackgroundVideo() {
       }
     };
 
+    const onMouseMove = (e: MouseEvent) => handleMove(e.clientX);
+    const onTouchStart = (e: TouchEvent) => { prevXRef.current = e.touches[0].clientX; };
+    const onTouchMove = (e: TouchEvent) => handleMove(e.touches[0].clientX);
+
     video.addEventListener('seeked', onSeeked);
     window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('touchstart', onTouchStart);
+    window.addEventListener('touchmove', onTouchMove);
 
     return () => {
       video.removeEventListener('seeked', onSeeked);
       window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
 
@@ -70,8 +78,7 @@ export default function BackgroundVideo() {
       muted
       playsInline
       preload="auto"
-      className="fixed inset-0 w-full h-full object-cover z-0"
-      style={{ objectPosition: '70% center' }}
+      className="fixed inset-0 w-full h-full object-cover z-0 object-center md:object-[70%_center]"
     />
   );
 }
