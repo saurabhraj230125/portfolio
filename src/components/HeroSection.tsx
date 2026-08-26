@@ -43,12 +43,21 @@ export default function HeroSection() {
       className="relative z-[1] h-screen flex flex-col justify-end pb-14 md:justify-center md:pb-0 px-5 sm:px-8 md:px-10 overflow-hidden"
       aria-label="Hero"
     >
-      {/* Gradient overlay — left-heavy so text is legible */}
+      {/* Gradient overlays for text legibility */}
+      {/* Desktop: Left-to-right gradient */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="hidden md:block absolute inset-0 pointer-events-none"
         style={{
           background:
-            'linear-gradient(105deg, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.35) 55%, rgba(8,8,8,0.05) 100%)',
+            'linear-gradient(105deg, rgba(8,8,8,0.85) 0%, rgba(8,8,8,0.4) 55%, rgba(8,8,8,0) 100%)',
+        }}
+      />
+      {/* Mobile: Bottom-to-top gradient (leaves the top character fully visible) */}
+      <div
+        className="md:hidden absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(to top, rgba(8,8,8,0.95) 0%, rgba(8,8,8,0.6) 45%, rgba(8,8,8,0) 85%)',
         }}
       />
 
